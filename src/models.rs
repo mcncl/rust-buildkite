@@ -50,5 +50,9 @@ mod tests {
 
         let pipeline: Pipeline = serde_json::from_str(json).unwrap();
         assert_eq!(pipeline.slug, "my-pipeline");
+
+        let back = serde_json::to_string(&pipeline).unwrap();
+        let reparsed: Pipeline = serde_json::from_str(&back).unwrap();
+        assert_eq!(reparsed.name, "My Pipeline")
     }
 }
