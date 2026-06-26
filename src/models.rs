@@ -16,7 +16,7 @@ pub struct Build {
 }
 
 // BuildState represents the states which a Buildkite build can be in
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum BuildState {
     Running,
@@ -54,5 +54,11 @@ mod tests {
         let back = serde_json::to_string(&pipeline).unwrap();
         let reparsed: Pipeline = serde_json::from_str(&back).unwrap();
         assert_eq!(reparsed.name, "My Pipeline")
+    }
+
+    #[test]
+    fn parses_build_state() {
+        let state: BuildState = serde_json::from_str("\"passed\"").unwrap();
+        assert_eq!(state, BuildState::Passed);
     }
 }
