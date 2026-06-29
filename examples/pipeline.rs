@@ -7,8 +7,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new(token);
 
     let pipeline = client.pipelines().get("ORG", "PIPELINE").await?;
-    let pipeline_list = client.pipelines().list("ORG").await?;
     println!("{pipeline:?}");
-    println!("{pipeline_list:?}");
     Ok(())
 }
