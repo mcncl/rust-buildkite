@@ -1,5 +1,8 @@
+use serde::de::DeserializeOwned;
+
 use crate::error::{Error, Result};
-use crate::models::{Ping, Pipeline};
+use crate::models::Ping;
+use crate::pipelines::Pipelines;
 
 const DEFAULT_BASE_URL: &str = "https://api.buildkite.com/";
 
@@ -51,16 +54,23 @@ impl Client {
             .map_err(|e| Error::Decode(e.to_string()))
     }
 
-    pub async fn get_pipeline(&self, org: &str, slug: &str) -> Result<Pipeline> {
-        let url = format!("{}v2/organizations/{org}/pipelines/{slug}", self.base_url);
+    pub fn pipelines(&self) -> Pipelines<'_> {
+        Pipelines { client: self }
+    }
 
-        let resp = self
-            .http
-            .get(&url)
-            .bearer_auth(self.token()?)
-            .send()
-            .await
-            .map_err(|e| Error::Http(e.to_string()))?;
+    /// Shared GET: build URL, optionally auth, check status, decode JSON.
+    /// `pub(crate)` = visible to sibling modules, invisible outside the crate.
+    pub(crate) async fn get_json<T: DeserializeOwned>(
+        &self,
+        path: &str,
+        authenticated: bool,
+    ) -> Result<T> {
+        let url = format!("{}{path}", self.base_url);
+        let mut req = self.http.get(&url);
+        if authenticated {
+            req = req.bearer_auth(self.token()?);
+        }
+        let resp = req.send().await.map_err(|e| Error::Http(e.to_string()))?;
 
         if !resp.status().is_success() {
             return Err(Error::Api {
@@ -69,7 +79,7 @@ impl Client {
             });
         }
 
-        resp.json::<Pipeline>()
+        resp.json::<T>()
             .await
             .map_err(|e| Error::Decode(e.to_string()))
     }

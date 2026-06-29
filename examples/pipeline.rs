@@ -6,7 +6,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token = std::env::var("BUILDKITE_TOKEN").ok();
     let client = Client::new(token);
 
-    let pipeline = client.get_pipeline("ORG", "PIPELINE").await?;
+    let pipeline = client.pipelines().get("ORG", "PIPELINE").await?;
+    let pipeline_list = client.pipelines().list("ORG").await?;
     println!("{pipeline:?}");
+    println!("{pipeline_list:?}");
     Ok(())
 }

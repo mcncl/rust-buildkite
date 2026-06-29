@@ -23,10 +23,10 @@ impl fmt::Display for Error {
             Error::Api { status, message } => {
                 write!(f, "api error {status}: {message}")
             }
-            Error::Decode(msg) => write!(f, "decode error: {msg}"),
             Error::MissingToken => {
                 write!(f, "missing token: this endpoint requires authentication")
             }
+            Error::Decode(msg) => write!(f, "decode error: {msg}"),
         }
     }
 }
