@@ -1,5 +1,6 @@
 use serde::de::DeserializeOwned;
 
+use crate::clusters::Clusters;
 use crate::error::{Error, Result};
 use crate::models::Ping;
 use crate::models::pipeline::CreatePipelineInput;
@@ -53,6 +54,10 @@ impl Client {
         resp.json::<Ping>()
             .await
             .map_err(|e| Error::Decode(e.to_string()))
+    }
+
+    pub fn clusters(&self) -> Clusters<'_> {
+        Clusters { client: self }
     }
 
     pub fn pipelines(&self) -> Pipelines<'_> {
