@@ -2,6 +2,7 @@ use serde::de::DeserializeOwned;
 
 use crate::error::{Error, Result};
 use crate::models::Ping;
+use crate::models::pipeline::CreatePipelineInput;
 use crate::pipelines::Pipelines;
 
 const DEFAULT_BASE_URL: &str = "https://api.buildkite.com/";
@@ -69,6 +70,32 @@ impl Client {
         let mut req = self.http.get(&url);
         if authenticated {
             req = req.bearer_auth(self.token()?);
+        }
+        let resp = req.send().await.map_err(|e| Error::Http(e.to_string()))?;
+
+        if !resp.status().is_success() {
+            return Err(Error::Api {
+                status: resp.status().as_u16(),
+                message: resp.text().await.unwrap_or_default(),
+            });
+        }
+
+        resp.json::<T>()
+            .await
+            .map_err(|e| Error::Decode(e.to_string()))
+    }
+
+    pub(crate) async fn post_json<T: DeserializeOwned>(
+        &self,
+        path: &str,
+        authenticated: bool,
+        input: CreatePipelineInput,
+    ) -> Result<T> {
+        let url = format!("{}{path}", self.base_url);
+        let mut req = self.http.post(&url);
+        if authenticated {
+            req = req.bearer_auth(self.token()?);
+            req = req.json(&input)
         }
         let resp = req.send().await.map_err(|e| Error::Http(e.to_string()))?;
 
